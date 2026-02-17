@@ -248,7 +248,7 @@
                 return;
             }
             try {
-                const defaultScriptUrl = 'https://script.google.com/macros/s/AKfycbzmV9KbmyooGQ0s4Fo1MavWMs5cdL1543ZkO6QsexcvAcluiNtmP5L6u797_CHb__dY/exec';
+                const defaultScriptUrl = 'https://script.google.com/macros/s/AKfycbxlYXUZZyy_Rqh2pmp5VI10HqHu02Ty2Nd7zhRz3cpf4wwwDksq-tzP70YMN1nx97oW/exec';
                 const scriptUrl = localStorage.getItem('sozha_script_url') || defaultScriptUrl;
 
                 const response = await fetch(`${scriptUrl}?action=getProject&id=${projectId}`);
