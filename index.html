@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sozha Admin | Project Maintenance</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+    <!-- FullCalendar CDN -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#c5a059">
+</head>
+
+<body class="admin-view">
+    <div class="liquid-bg">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="blob blob-4"></div>
+    </div>
+    <div id="splash-screen">
+        <img src="logo.png" alt="Sozha Design & Build Logo" id="splash-logo">
+    </div>
+    <div id="meetingAlert" class="meeting-alert" style="display: none;">
+        <div class="alert-content">
+            <span class="iconify" data-icon="material-symbols:event-upcoming-outline"></span>
+            <div class="alert-text">
+                <strong>Today's Meeting:</strong> <span id="meetingAlertInfo">Loading...</span>
+            </div>
+        </div>
+        <button class="alert-close" onclick="dismissMeetingAlert()">
+            <span class="iconify" data-icon="material-symbols:close"></span>
+        </button>
+    </div>
+    <div class="container">
+        <header>
+            <div class="brand-group">
+                <div class="logo">SOZHA</div>
+                <div class="brand-divider"></div>
+                <div class="title-area">
+                    <div class="title">MAINTENANCE SYSTEM</div>
+                    <div id="networkStatus" class="status-indicator">● Online</div>
+                </div>
+            </div>
+
+            <div class="header-content">
+                <div class="search-tools-group">
+                    <div class="search-container" id="searchContainer">
+                        <input type="text" id="projectSearch" placeholder="Search..."
+                            oninput="handleSearch(this.value)">
+                        <button class="secondary icon-btn" id="voiceSearchBtn" onclick="startVoiceSearch()"
+                            title="Voice Search">
+                            <span class="iconify" data-icon="material-symbols:mic"></span>
+                        </button>
+                        <button class="secondary icon-btn"
+                            onclick="handleSearch(document.getElementById('projectSearch').value)" title="Search">
+                            <span class="iconify" data-icon="material-symbols:search"></span>
+                        </button>
+                    </div>
+                    <div class="action-buttons-group">
+                        <button class="secondary icon-btn" onclick="updateScriptUrl()" title="Settings">
+                            <span class="iconify" data-icon="material-symbols:settings-outline"></span>
+                        </button>
+                        <button class="secondary icon-btn" onclick="openInstallGuide()" title="Installation Guide">
+                            <span class="iconify" data-icon="material-symbols:help-outline"></span>
+                        </button>
+                        <button class="secondary" id="syncBtn" onclick="fetchProjects(true)" title="Sync from Cloud">
+                            <span class="iconify" data-icon="material-symbols:cloud-sync-outline"></span>
+                            Sync
+                        </button>
+                    </div>
+                </div>
+
+                <div class="main-actions-group">
+                    <button id="addProjectBtn" class="primary-btn">
+                        <span class="iconify" data-icon="material-symbols:add"></span>
+                        Add New Project
+                    </button>
+                    <button class="secondary" onclick="openConverterModal()" title="Unit Converter">
+                        <span class="iconify" data-icon="material-symbols:straighten-outline"></span>
+                        Converter
+                    </button>
+                </div>
+
+                <div class="quick-links-group">
+                    <a href="brochure.html" class="link-item" target="_blank">
+                        <span class="iconify" data-icon="material-symbols:book-2-outline"></span>
+                        Brochure
+                    </a>
+                    <a href="payment.html" class="link-item pay-link" target="_blank">
+                        <span class="iconify" data-icon="material-symbols:payments-outline"></span>
+                        Scan & Pay
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <section id="projectFormSection" class="card" style="display: none;">
+            <h2 id="formTitle">Project Details</h2>
+            <form id="projectForm">
+                <input type="hidden" id="editingId">
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="projName" required placeholder="e.g. Modern Villa - Block A">
+                </div>
+                <div class="form-group">
+                    <label>Client Name</label>
+                    <input type="text" id="clientName" required placeholder="e.g. John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Client Email</label>
+                    <input type="email" id="clientEmail" required placeholder="e.g. john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Client Phone</label>
+                    <input type="tel" id="clientPhone" placeholder="e.g. +91 98765 43210">
+                </div>
+                <div class="form-group">
+                    <label>Project Type</label>
+                    <select id="projType">
+                        <option value="Design">Design</option>
+                        <option value="Construction">Construction</option>
+                        <option value="Steam UE 5 Files">Steam UE 5 Files</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Total Cost (₹)</label>
+                        <input type="number" id="totalCost" required placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Paid Amount (₹)</label>
+                        <input type="number" id="paidAmount" required placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Current Stage</label>
+                    <input type="text" id="projStage" required placeholder="e.g. Foundation Work">
+                </div>
+                <div class="form-group">
+                    <label>Maintenance Status</label>
+                    <select id="status">
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="notes" rows="3" placeholder="Recent maintenance details..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Design Images (Comma-separated URLs)</label>
+                    <input type="text" id="designUrl" placeholder="Link1, Link2, Link3...">
+                </div>
+                <div class="form-group">
+                    <label>Project Video URL (YouTube/Direct Link)</label>
+                    <input type="text" id="videoUrl" placeholder="https://youtube.com/watch?v=...">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit">Save Project</button>
+                    <button type="button" class="secondary" onclick="toggleForm()">Cancel</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="analytics" class="card" style="margin-bottom: 2rem;">
+            <h2>Project Overview</h2>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div id="statsSummary"
+                style="display: flex; justify-content: space-around; margin-top: 1.5rem; text-align: center;">
+                <!-- Stats will be injected here -->
+            </div>
+        </section>
+
+        <section id="dashboard">
+            <div class="tabs">
+                <div class="tab active" data-type="Design" onclick="switchTab('Design')">Design Projects</div>
+                <div class="tab" data-type="Construction" onclick="switchTab('Construction')">Construction Projects
+                </div>
+                <div class="tab" data-type="Scheduling" onclick="switchTab('Scheduling')">Scheduling</div>
+                <div class="tab" data-type="Steam UE 5 Files" onclick="switchTab('Steam UE 5 Files')">Steam UE 5 Files
+                </div>
+                <div class="tab" data-type="Voice" onclick="startVoiceSearch()"
+                    style="border: 1px dashed var(--accent-color);">
+                    <span class="iconify" data-icon="material-symbols:mic"></span> Voice Search
+                </div>
+            </div>
+
+
+            <div class="project-grid" id="projectList">
+                <!-- Projects will be injected here -->
+            </div>
+            <div id="calendarView" class="card" style="display: none; margin-top: 1rem;">
+                <div id="calendar"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qrModal" class="modal">
+        <div class="card" style="background:#1a1a1a; max-width:400px; text-align:center; padding: 2rem;">
+            <h3 id="modalTitle">Client Access QR</h3>
+            <div id="qrcode" class="qr-container"
+                style="margin: 1.5rem auto; border: 8px solid white; border-radius: 8px; width: fit-content;"></div>
+            <p style="margin-top:1rem; color:var(--text-secondary); font-size: 0.9rem;">Scan to view project status</p>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1.5rem;">
+                <button id="copyLinkBtn" class="btn" style="background: var(--accent-color); color: black;">
+                    <span class="iconify" data-icon="material-symbols:content-copy"></span>
+                    Copy Access Link
+                </button>
+                <button class="secondary" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Installation Guide Modal -->
+    <div id="installGuideModal" class="modal">
+        <div class="card install-guide-card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                <h3>Install Sozha Maintenance App</h3>
+                <button class="secondary" style="padding: 0.5rem; min-width: auto;" onclick="closeInstallGuide()">
+                    <span class="iconify" data-icon="material-symbols:close"></span>
+                </button>
+            </div>
+
+            <div class="install-tabs">
+                <button class="install-tab active" data-platform="desktop"
+                    onclick="switchInstallTab('desktop')">Desktop</button>
+                <button class="install-tab" data-platform="android"
+                    onclick="switchInstallTab('android')">Android</button>
+                <button class="install-tab" data-platform="ios" onclick="switchInstallTab('ios')">iOS
+                    (iPhone/iPad)</button>
+            </div>
+
+            <div id="desktop-guide" class="guide-content active">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <p>Open this site in <strong>Chrome</strong> or <strong>Edge</strong> browser.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <p>Click the <strong>Install</strong> icon in the address bar or looking for <strong>"Install
+                            App"</strong> in the menu.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <p>Click <strong>"Install"</strong> when prompted.</p>
+                </div>
+            </div>
+
+            <div id="android-guide" class="guide-content">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <p>Open this site in <strong>Chrome</strong> on your Android device.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <p>Tap the <strong>three dots</strong> (menu) in the top right corner.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <p>Select <strong>"Add to Home screen"</strong> or <strong>"Install app"</strong>.</p>
+                </div>
+            </div>
+
+            <div id="ios-guide" class="guide-content">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <p>Open this site in <strong>Safari</strong> on your iPhone or iPad.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <p>Tap the <strong>Share</strong> button (box with an upward arrow) at the bottom.</p>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <p>Scroll down and tap <strong>"Add to Home Screen"</strong>.</p>
+                </div>
+            </div>
+
+            <button id="guideInstallBtn"
+                style="width: 100%; justify-content: center; margin-top: 1.5rem; display: none;">
+                Install Now
+            </button>
+        </div>
+    </div>
+
+    <!-- Meeting Modal -->
+    <div id="meetingModal" class="modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+        <div class="card" style="background:#1a1a1a; width:100%; max-width:500px;">
+            <h3 id="meetingFormTitle">Schedule Meeting</h3>
+            <form id="meetingForm">
+                <input type="hidden" id="meetingId">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Meeting Title</label>
+                        <input type="text" id="meetingTitle" required placeholder="e.g. Design Review">
+                    </div>
+                    <div class="form-group">
+                        <label>Event Type</label>
+                        <select id="meetingType">
+                            <option value="Meeting">Meeting</option>
+                            <option value="Reminder">Reminder</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label>Start Time</label>
+                        <input type="datetime-local" id="meetingStart" required>
+                    </div>
+                    <div class="form-group">
+                        <label>End Time</label>
+                        <input type="datetime-local" id="meetingEnd" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Related Project</label>
+                    <select id="meetingProject">
+                        <option value="">No related project</option>
+                        <!-- Options will be injected -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="meetingDescription" rows="3" placeholder="Meeting details..."></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit">Save Meeting</button>
+                    <button type="button" id="deleteMeetingBtn" class="secondary"
+                        style="background: #ff4444; color: white; display: none;">Delete</button>
+                    <button type="button" class="secondary" onclick="closeMeetingModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Custom Filterable Modal -->
+    <div id="customModal" class="modal">
+        <div class="custom-modal-content">
+            <h3 id="customModalTitle" class="custom-modal-title"></h3>
+            <p id="customModalMessage" class="custom-modal-message"></p>
+            <div id="customModalInputContainer" style="display: none;">
+                <input type="text" id="customModalInput" class="custom-modal-input">
+            </div>
+            <div id="customModalActions" class="custom-modal-actions">
+                <!-- Buttons will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Unit Converter Modal -->
+    <div id="converterModal" class="modal">
+        <div class="card" style="background:#1a1a1a; max-width:450px; width: 90%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="margin: 0;">Unit Converter</h3>
+                <button class="secondary icon-btn" style="min-width: auto; width: 32px; height: 32px;"
+                    onclick="closeConverterModal()">
+                    <span class="iconify" data-icon="material-symbols:close"></span>
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label>From Unit</label>
+                <select id="converterFrom" onchange="handleUnitChange()">
+                    <option value="m">Meters (m)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                    <option value="mm">Millimeters (mm)</option>
+                    <option value="ft-in">Feet & Inches (Fractional)</option>
+                </select>
+            </div>
+
+            <div id="metricInputGroup" class="form-group">
+                <label>Input Value</label>
+                <input type="number" id="converterInput" placeholder="0.00" oninput="calculateConversion()">
+            </div>
+
+            <div id="imperialInputGroup" class="form-group" style="display: none;">
+                <label>Input Value (Feet / Inches / Fraction)</label>
+                <div class="imperial-inputs">
+                    <input type="number" id="inputFeet" placeholder="Feet" oninput="calculateConversion()">
+                    <input type="number" id="inputInches" placeholder="Inches" oninput="calculateConversion()">
+                    <select id="inputFraction" onchange="calculateConversion()">
+                        <option value="0">0</option>
+                        <option value="0.0625">1/16"</option>
+                        <option value="0.125">1/8"</option>
+                        <option value="0.1875">3/16"</option>
+                        <option value="0.25">1/4"</option>
+                        <option value="0.3125">5/16"</option>
+                        <option value="0.375">3/8"</option>
+                        <option value="0.4375">7/16"</option>
+                        <option value="0.5">1/2"</option>
+                        <option value="0.5625">9/16"</option>
+                        <option value="0.625">5/8"</option>
+                        <option value="0.6875">11/16"</option>
+                        <option value="0.75">3/4"</option>
+                        <option value="0.8125">13/16"</option>
+                        <option value="0.875">7/8"</option>
+                        <option value="0.9375">15/16"</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>To Unit</label>
+                <select id="converterTo" onchange="calculateConversion()">
+                    <option value="m">Meters (m)</option>
+                    <option value="cm">Centimeters (cm)</option>
+                    <option value="mm">Millimeters (mm)</option>
+                    <option value="ft-decimal">Feet (Decimal)</option>
+                    <option value="ft-in" selected>Feet & Inches (Fractional)</option>
+                </select>
+            </div>
+
+            <div class="converter-result-box"
+                style="background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 16px; text-align: center; margin: 1.5rem 0; border: 1px solid var(--border-color);">
+                <div id="converterResultLabel"
+                    style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem;">
+                    Result</div>
+                <div id="converterResult" style="font-size: 2.2rem; font-weight: 800; color: var(--accent-color);">0' 0"
+                </div>
+            </div>
+
+            <button id="copyConverterBtn" class="btn"
+                style="width: 100%; background: var(--accent-color); color: black;">
+                <span class="iconify" data-icon="material-symbols:content-copy"></span>
+                Copy Result
+            </button>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script src="app.js"></script>
+</body>
+
+</html>
